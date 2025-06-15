@@ -1,0 +1,110 @@
+Query Tuning Runbook:
+----------------------
+
+/** Resources 
+==================
+https://www.mssqltips.com/sqlservertip/7125/sql-query-performance-tuning-tips/
+https://www.sqlskills.com/blogs/paul/advanced-performance-troubleshooting-waits-latches-spinlocks/
+www.mssqltips.com/webcast/tuning-problematic-sql-server-queries-with-minimal-changes/
+https://www.sqlskills.com/blogs/paul/wait-statistics-or-please-tell-me-where-it-hurts/
+https://www.sqlskills.com/blogs/paul/advanced-performance-troubleshooting-waits-latches-spinlocks/
+
+Reading physical operation - Table Scan, Index Seek, and Lookup
+Joining Data - Nested Loops, Merge and Hash Match
+
+Table Scan - query does not use any indexes and scans the entire table.
+Index Seek - table has indexes and the query uses index will do a index seek wich is fastest way to find the data.
+
+**/
+
+
+
+
+
+STATISTICS IO, TIME; 
+STATISTICS PROFILE; --actual execution plan
+STATISTICS XML; -- used to get a plan at runtime
+SET STATISTICS SHOWPLAN_ALL ON; -- Estimated execution plan
+
+1. Look for query operators with highest cost
+	Clustered Index Scan
+	Sort
+	Spool
+	Index Scan
+	Table Scan
+	Hash Match
+
+2. Look for Warnings
+	Implicit conversion
+	Excessive Memory Grant
+
+3. Arrows between Operators
+	Actual Number of Rows vs Estimated Number of Rows
+		Check these values as they change depending on the param values being passed
+
+4. Execution Plan Properties
+
+5. Index Suggestions (Missing Indexes)
+	Review the suggestion first and review existing indexes before creating duplicate indexes
+
+6. SARGable queries
+	Indicates that a search argument in the WHERE clause can effectively use an index
+	Not SARGable => WHERE SUBSTRING(LastName,1,1) = 'A'	(does not use the index)
+	SARGable => WHERE LastName LIKE 'A%'	(does use the index) {SHOULD PERFORM BETTER ON THE BELOW PROPERTIES}
+
+	Check:
+		Actual Number of Rows for All Executions
+		Actual Number of Rows Read
+		Estimated CPU Cost
+
+7. Data Distribution
+	If a query runs fast sometimes and much slower other times, it could be related to data distribution and the statistics
+	If data by expanding the table in SSMS and under Statistics 
+
+	DBCC SHOW_STATISTICS("Production.WorkOrder", _WA_Sys_00000007_59904A2C);
+
+	Good Database design; include Data Purging and removal of istorical data to some type of archival syste,. Keeping the data 
+	set smaller will assist with joins and filtering as well as maintenance tasks.
+
+8. Performance Metrics
+	Get wait stats --> https://www.sqlskills.com/blogs/paul/wait-statistics-or-please-tell-me-where-it-hurts/
+	SQL Performance Counters 
+	Extended Events 
+	Query Store 
+
+New SQL Features
+	Intelligent QP
+		Adaptive QP
+			Adaptive Joins
+			Interleaved Execution
+			Memory Grant Feedback
+				Batch Mode
+				Row Store
+		Table Variable Deferred Compilation
+		Batch Mode on Rowstore
+		T-SQL Scalar UDF Inlining
+		Apprximate QP
+			Approximate Count Discount
+
+----------------------------------
+Considerations:
+
+- Deadlocks
+- Blocking
+- Missing and unused indexes
+- I/O bottlenecks
+- Poor query plans
+- Statistics
+- Wait Stats
+- Fragmentation
+
+
+	
+
+
+
+
+
+
+	 
+	 
